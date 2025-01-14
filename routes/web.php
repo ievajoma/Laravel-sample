@@ -7,5 +7,14 @@ Route::get('/', function () {
 });
 
 Route::get('/welcome', function () {
-    return view('welcome');
+    $time = date('H');
+    if ($time >= 5 && $time < 12) {
+        $greeting = "Good Morning!";
+    }elseif ($time >= 12 && $time < 18) {
+        $greeting = "Good Afternoon!";
+    }else {
+        $greeting = "Good Evening!";
+    }
+
+    return view('welcome', ['greeting' => $greeting]);
 });
