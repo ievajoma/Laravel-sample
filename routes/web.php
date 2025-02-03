@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -19,14 +20,4 @@ Route::get('/welcome', function () {
     return view('welcome', ['greeting' => $greeting]);
 });
 
-Route::get('/filter-products', function () {
-    $products = array('Gruntis' => 'produkti-gruntis',
-        'Krāsas' => 'produkti-krāsas',
-        'Špakteles' => 'produkti-špakteles',
-        'Dekoratīvie klājumi' => 'produkti-klājumi',
-        'Lakas' => 'produkti-lakas',
-        'Betons' => 'produkti-betoni');
-
-    return view('filter-products')
-        ->with('products', $products);
-});
+Route::get('/filter-products', [ProductController::class, 'index']);

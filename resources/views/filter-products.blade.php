@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,46 +10,87 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 </head>
 <body>
+<div class="grid grid-cols-[12rem_1fr_1fr] gap-4">
 
-    <div class="absolute inset-y-5 left-2 w-48 rounded-lg bg-zinc-700">
-        <form id="filterForm">
-            @foreach($products as $category => $product)
-                <div class="flex items-center ps-3">
-                    <input id="{{$category}}" type="checkbox" name="options[]" value="{{$product}}" class="cursor-pointer">
-                    <label for="{{$category}}" class="cursor-pointer w-full py-3 ms-2 text-sm font-medium text-gray-300">{{$category}}</label>
-                </div>
-            @endforeach
-            <button type="submit" class="block mx-auto w-40 border border-gray-400 rounded-lg py-4 text-base font-bold text-blue-400">Parādīt izvēlētos</button>
-        </form>
+    {{-- sidebar with checkboxes for each category --}}
+    <div class="bg-blue-500 p-4">
+        <h3 class="text-xl font-semibold mb-3">Izvēlies kategorijas:</h3>
+        @foreach ($categories as $category)
+            <label>
+                <input type="checkbox" name="categories[]" value="{{ $category['id'] }}" class="category-checkbox">
+                {{ $category['name'] }}
+            </label><br>
+        @endforeach
     </div>
-    <!-- end sidebar with checkboxes -->
 
-    <div class="absolute inset-y-5 right-5 left-60 max-w-fit text-3xl font-semibold text-left mt-5" id="result"></div>
+    {{-- a list of selected products --}}
+    <div class="bg-slate-400 p-4">
+        <h2 class="text-2xl font-bold mb-4">Atlasītie produkti:</h2>
+        <div id="product-list"></div>
+    </div>
 
-    <script>
-        $(document).ready(function () {
-            $('#filterForm').on('submit', function (e) {
-                e.preventDefault();
+    {{-- a list of all products --}}
+    <div class="bg-slate-400 p-4">
+        <h2 class="text-2xl font-bold mb-4">Visu produktu saraksts:</h2>
+        @foreach ($categories as $category)
+            <h3 class="text-xl font-semibold mt-3">{{ $category['name'] }}</h3>
+            <ul class="list-disc pl-6">
+                @foreach ($products as $product)
+                    @if ($product['category_id'] == $category['id'])
+                        <li>{{ $product['name'] }}</li>
+                    @endif
+                @endforeach
+            </ul>
+        @endforeach
+    </div>
+</div>
 
-                const selectedOptions = [];
-                $('input[name="options[]"]:checked').each(function () {
-                    selectedOptions.push($(this).val());
+<script>
+    const products = @json($products);
+    const categories = @json($categories);
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkboxes = document.querySelectorAll('.category-checkbox');
+        const productList = document.querySelector('#product-list');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function (){
+                productList.innerHTML = "";
+
+                const selectedCategories = Array.from(checkboxes)
+                    .filter((cb) => cb.checked)
+                    .map((cb) => parseInt(cb.value));
+
+                categories.forEach(category => {
+                    if (selectedCategories.includes(category.id)) {
+                        const categoryHeading = document.createElement('h3');
+                        categoryHeading.textContent = category.name;
+                        categoryHeading.classList.add("text-xl", "font-semibold", "mt-3");
+                        productList.appendChild(categoryHeading);
+
+                        const ul = document.createElement('ul');
+                        const filteredProducts = products.filter(product => product.category_id === category.id);
+
+                        filteredProducts.forEach(product => {
+                            const li = document.createElement('li');
+                            li.textContent = product.name;
+                            ul.classList.add("list-disc", "pl-6");
+                            ul.appendChild(li);
+                        });
+
+                        if (filteredProducts.length > 0) {
+                            productList.appendChild(ul);
+                        } else {
+                            const noProductsMsg = document.createElement('li');
+                            noProductsMsg.textContent = 'Nav produktu šajā kategorijā';
+                            ul.appendChild(noProductsMsg);
+                            productList.appendChild(ul);
+                        }
+                    }
                 });
-
-                const resultDiv = $('#result');
-                resultDiv.empty();
-
-                if (selectedOptions.length > 0) {
-                    const ul = $('<ul></ul>');
-                    selectedOptions.forEach(function (option) {
-                        ul.append(`<li>${option}</li>`);
-                    });
-                    resultDiv.append(ul);
-                } else {
-                    resultDiv.text("Nav izvēlētu produktu kategoriju");
-                }
             });
         });
-    </script>
+    });
+</script>
 </body>
 </html>
